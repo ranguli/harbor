@@ -1,0 +1,17 @@
+- name: Install Stack
+  shell: curl -sSL https://get.haskellstack.org | sh
+
+- name: Install Cabal and Haskell via Stack
+  shell: stack install cabal-install 
+
+- name: Update Cabal
+  shell: cabal-update
+
+- name: Clone the hadolint repo 
+  become: true
+  git: 
+    repo: https://github.com/hadolint/hadolint
+    dest: ~/hadolint
+
+- name: Build hadolint
+  shell: cd ./hadolint && stack install

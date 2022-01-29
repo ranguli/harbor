@@ -1,0 +1,129 @@
+---
+- hosts: all
+  remote_user: root
+  vars:
+    terraform_version: 0.11.3
+  
+  tasks:
+    # Note that we become superuser for installing apt packages
+    - name: Install apt packages 
+      become: true
+      apt:
+        update_cache: yes
+        pkg: 
+        - python3-apt
+        - python3-pip
+        - python3-venv
+        - zsh
+        - vim
+        - tmux
+        - git
+        - htop
+        - build-essential
+        - stow
+        - wget
+        - curl
+        - pass
+        - unzip
+        - libnss3-tools
+
+        # Docker 
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - gnupg-agent
+        - software-properties-common
+
+        # TODO: See if Pyenv will still work if we remove these deps
+        - make 
+        - libssl-dev 
+        - libbz2-dev
+        - libreadline-dev 
+        - libsqlite3-dev 
+        - llvm 
+        - libncurses5-dev 
+        - libncursesw5-dev
+        - tk-dev 
+        - libffi-dev 
+        - liblzma-dev 
+        - python-openssl
+
+        # Things needed for a haskell env
+        - libicu-dev 
+        - libtinfo-dev 
+        - libgmp-dev 
+        - libc6-dev 
+        - libffi-dev 
+        - g++ 
+        - gcc 
+        - make 
+        - xz-utils 
+        - zlib1g-dev 
+        - gnupg 
+
+    - name: Clone dotfiles repo
+      git:
+        key_file: ~/.ssh/id_rsa
+        accept_hostkey: true
+        repo: git@github.com:ranguli/dotfiles.git
+        dest: ~/dotfiles 
+
+    - name: Stow dotfiles
+      shell: cd ~/dotfiles && stow --adopt vim tmux ssh git zsh
+
+    - name: Do that docker thing 
+      include: docker.yml
+    
+    - name: Do that node thing 
+      include: nodejs.yml
+    
+    - name: Do that terraform thing 
+      include: terraform.yml
+
+    - name: Do that Haskell thing (+ install tools written in Haskell)
+      include: haskell.yml
+    
+    - name: Set zsh as the default shell
+      become: true
+      user:
+        name: vagrant
+        groups: admin, docker
+        shell: /bin/zsh
+
+    - name: Install tools from pip
+      pip:
+        executable: pip3
+        name: 
+        - awscli
+        - pipenv
+        - poetry
+
+    - name: Install tools from npm
+      become: true
+      npm:
+        global: true
+        name: serverless
+    
+    - name: Add the Golang PPA 
+      become: true
+      apt_repository:
+        repo: ppa:longsleep/golang-backports
+        state: present
+
+    - name: Install the Golang package
+      become: true
+      apt:
+        name: golang-go
+        update_cache: yes
+
+    - name: Install pyenv
+      shell: rm -fr ~/.pyenv && curl https://pyenv.run | bash
+    
+    - name: Install aws-vault 
+      shell: go get github.com/99designs/aws-vault
+
+    - name: Install pyenv-virtualenv
+      become: true
+      git: 
+        repo: https://github.com/pyenv/pyenv-virtualenv.git 
+        dest: ~/.pyenv/plugins/pyenv-virtualenv

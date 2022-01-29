@@ -1,0 +1,10 @@
+- name: Download Terraform
+  become: true
+  shell: wget https://releases.hashicorp.com/terraform/{{ terraform_version }}/terraform_{{ terraform_version }}_linux_amd64.zip
+- name: Unzip Terraform
+  shell: unzip terraform_{{ terraform_version }}_linux_amd64.zip
+
+- name: Install Terraform
+  become: true
+  shell: chmod +x ./terraform && mv ./terraform /usr/bin
+

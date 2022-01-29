@@ -1,0 +1,10 @@
+- name: Download node
+  become: true
+  shell: curl -sL https://deb.nodesource.com/setup_13.x | bash -
+  args:
+    warn: false
+
+- name: Install Node package
+  become: true
+  apt:
+    name: nodejs
